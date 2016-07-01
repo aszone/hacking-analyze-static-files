@@ -1,0 +1,32 @@
+{
+  "name": "aszone/crawler-static-file",
+  "type": "library",
+  "description": "AsZone Component - Proxy Avenger",
+  "keywords": ["proxies","proxy","tor","virgin proxy","avenger","aszone","hacker","hacking","attack", "attacking"],
+  "homepage": "http://www.lenonleite.com.br",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Lenon Leite",
+      "email": "lenonleite@gmail.com.br",
+      "homepage": "http://www.lenonleite.com.br"
+    },
+    {
+      "name": "ASZone",
+      "homepage": "https://www.aszone.com.br"
+    }
+
+  ],
+  "require": {
+    "php": ">=5.3.9",
+    "guzzlehttp/guzzle":"~5.3",
+    "symfony/dom-crawler":"~2.8",
+    "aszone/fakeheaders": "~0.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "Aszone\\CrawlerStaticFile\\": "src/"
+    }
+  },
+  "minimum-stability": "dev"
+}
