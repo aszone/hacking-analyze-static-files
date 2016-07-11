@@ -11,6 +11,7 @@ namespace Aszone\CrawlerStaticFile;
 
 use Aszone\FakeHeaders\FakeHeaders;
 use GuzzleHttp\Client;
+use Symfony\Component\DomCrawler\Crawler;
 
 
 class CrawlerStaticFil
@@ -64,18 +65,22 @@ class CrawlerStaticFil
 
     protected function downloadAllFilesByInclude(){
         $urlFiles=$this->getIncludes($this->file);
+        $urlFiles=array_merge($this->getLinks($this->file),$urlFiles);
         $allUrlFiles=$urlFiles;
         $loop=true;
 
         while($loop==true){
             $newUrlFiles=array();
             foreach($urlFiles as $urlFile){
-                echo $urlFile."\n";
                 $body = $this->readFile($urlFile);
-                $this->saveFile($body,$this->getNameFile($urlFile));
-                $cacheUrlFiles=$this->getIncludes($body,$urlFile);
-                if($cacheUrlFiles){
-                    $newUrlFiles=array_merge($cacheUrlFiles,$newUrlFiles);
+                //Check if is file of system
+                if($this->checkIfFileSystem($body,$urlFile)){
+                    echo $urlFile."\n";
+                    $this->saveFile($body,$this->getNameFile($urlFile));
+                    $cacheUrlFiles=$this->getMoreLinksByBody($body,$urlFile);
+                    if($cacheUrlFiles){
+                        $newUrlFiles=array_merge($cacheUrlFiles,$newUrlFiles);
+                    }
                 }
             }
 
@@ -89,6 +94,22 @@ class CrawlerStaticFil
         }
 
         return $allUrlFiles;
+    }
+
+    protected function getMoreLinksByBody($body,$urlFile){
+
+        $cacheUrlFiles=array();
+        $cacheUrlFiles1=$this->getIncludes($body,$urlFile);
+        $cacheUrlFiles2=$this->getLinks($body);
+        if(!empty($cacheUrlFiles1)){
+            $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles1);
+        }
+        if(!empty($cacheUrlFiles2)){
+            $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles2);
+        }
+
+        return $cacheUrlFiles;
+
     }
 
     private function saveFile($file,$nameFile){
@@ -105,7 +126,6 @@ class CrawlerStaticFil
         if(is_dir($pathname)){
             return $this->folderSave = $pathname;
         }
-
         $valid= mkdir($pathname);
         if($valid){
             return $this->folderSave = $pathname;
@@ -144,13 +164,16 @@ class CrawlerStaticFil
     }
 
     public function checkLanguage(){
-        $isValid = preg_match("/<%@|<%|<\?php|<\?=/", $this->file, $m);
+        $isValid = preg_match("/<%@|<%|<\?php|<\?=|<\?/", $this->file, $m);
         if ($isValid) {
             switch ($m[0]) {
                 case "<?php":
                     $result= "php";
                     break;
                 case "<?=":
+                    $result= "php";
+                    break;
+                case "<?":
                     $result= "php";
                     break;
                 case "<%@":
@@ -218,8 +241,8 @@ class CrawlerStaticFil
     }
 
     protected function getNameFile($url){
-        //$validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?)." . $this->language . "/i", $url, $m);
-        $validResult = preg_match("/.".$this->language.".*?(=|\/)(.+?)\.(".$this->language."|ini|inc|yml)/i", $url, $m);
+
+        $validResult = preg_match("/.".$this->language.".*?(=|\/)(.+?)\.(".$this->language."|ini|inc|yml|env|html)/i", $url, $m);
 
         if ($validResult) {
             return $m[2] . "." . $m[3];
@@ -231,6 +254,47 @@ class CrawlerStaticFil
     protected function getPatchFolder(){
         $urlExplode=parse_url($this->url);
         return $this->createFolder($urlExplode['host']);
+    }
+
+    protected function checkIfFileSystem($body,$urlFile){
+
+
+        $isValid = preg_match("/<%@|<%|<\?php|<\?=|<\?/", $body, $m);
+        $validResult = preg_match("/.".$this->language.".*?(=|\/)(.+?)\.(".$this->language."|ini|inc|yml|env|html)/i", $urlFile,
+            $m2);
+
+        if($isValid or ( $validResult and ($m2[3]=="ini" or $m2[3]=="inc" or $m2[3]=="yml" or $m2[3]=="env"))){
+            return true;
+        }
+        return false;
+    }
+
+    protected function getLinks($body){
+
+        $crawler = new Crawler($body);
+        $urls=array();
+        $crawler->filter('a')->each(function (Crawler $node, $i) use(&$res) {
+            $res[]= $node->attr('href');
+        });
+        if($res){
+            foreach($res as $r){
+                $urls[]=$this->generateExploitOfLinkInBody($r);
+            }
+        }
+
+
+        return $urls;
+
+    }
+
+    protected function generateExploitOfLinkInBody($url){
+
+        $arrUrl=parse_url($url);
+        if(isset($arrUrl['path'])){
+            return str_replace("######",$arrUrl['path'],$this->getBaseExploit());
+        }
+        return false;
+
     }
 
 
