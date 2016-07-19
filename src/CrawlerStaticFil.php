@@ -31,7 +31,6 @@ class CrawlerStaticFil
     public function __construct($commandData,$url)
     {
 
-        //echo $url."\n";
         $this->commandData = array_merge($this->defaultEnterData(), $commandData);
         $this->url =$url;
         $this->file =$this->readFile($url);
@@ -57,18 +56,17 @@ class CrawlerStaticFil
 
     public function getAllFiles(){
 
-        $results['includes']=$this->downloadAllFilesByInclude();
-//        $results['links']=
+        $results['includes']=$this->downloadAllFiles();
 
         return $results;
     }
 
-    protected function downloadAllFilesByInclude(){
+    protected function downloadAllFiles(){
 
+        $urlFiles=array();
         $urlFiles=$this->getIncludes($this->file);
         $urlFiles=array_merge($this->getLinks($this->file),$urlFiles);
         $urlFiles=array_merge($this->findIndexs($this->url),$urlFiles);
-
         $allUrlFiles=$urlFiles;
         $loop=true;
 
@@ -102,6 +100,8 @@ class CrawlerStaticFil
     protected function findIndexs($url){
 
         $arrUrl=parse_url($url);
+        $ext=explode(".",$arrUrl["path"]);
+
         $arrUrl["query"]=str_replace("//","/",$arrUrl["query"]);
         $explodeQuery=explode("/",$arrUrl["query"]);
         $query=array();
@@ -109,11 +109,13 @@ class CrawlerStaticFil
             $patch="";
             foreach($explodeQuery as $parseQuery){
                 $patch.=$parseQuery."/";
-                $query[]=$arrUrl["scheme"]."://".$arrUrl["host"].$arrUrl["path"]."?".$patch."index.php";
+                $query[]=$arrUrl["scheme"]."://".$arrUrl["host"].$arrUrl["path"]."?".$patch."index.".$ext[1];
+                if($ext[1]=="asp"){
+                    $query[]=$arrUrl["scheme"]."://".$arrUrl["host"].$arrUrl["path"]."?".$patch."default.".$ext[1];
+                }
             }
             array_pop($query);
         }
-        //var_dump($query);
         return $query;
     }
 
@@ -134,15 +136,12 @@ class CrawlerStaticFil
             $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles3);
         }
 
-        //var_dump($cacheUrlFiles);
         return $cacheUrlFiles;
 
     }
 
     private function saveFile($file,$nameFile)
     {
-        echo $nameFile.".***\n";
-
         $myfile = fopen($this->folderSave."/".str_replace("/","-",$nameFile), "w") or die("Unable to open file!");
         fwrite($myfile, $file);
         fclose($myfile);
@@ -173,31 +172,20 @@ class CrawlerStaticFil
     public function getIncludes($file,$patchFileNow=false){
 
         $resultFinal=array();
-        $isValid = preg_match_all("/(include|require|require_once|include_once)(.+|)\((.+|)(\"|\')(.+?)(\"|\')(.+|)\)/i", $file, $m);
+        $isValid = preg_match_all("/(include file|require_once|include_once|include|require)(.+|)(\(|\=|)(.+|)(\"|\')(.+?)(\"|\')((.+|))(\)|-->|)/i", $file, $m);
 
         //$this->urlBaseExploit
         if ($isValid) {
             $results=$this->sanitazePregMatchAll($m);
-            //var_dump($results);
-//            if($patchFileNow){
-//                foreach($results as $result){
-//                    $resultFinal[]=$this->generateUrl($result,$patchFileNow);
-//                }
-//            }else{
-//                foreach($results as $result){
-//                    $resultFinal[]=$this->generateUrl($result);
-//                }
-//
-//            }
             foreach($results as $result){
                 $resultFinal[]=$this->generateUrl($result,$patchFileNow);
                 $resultFinal[]=$this->generateUrlAbsolute($result,$patchFileNow);
             }
             //var_dump($resultFinal);
-            return $resultFinal;
+            //return $resultFinal;
         }
 
-        return false;
+        return $resultFinal;
 
     }
 
@@ -250,15 +238,7 @@ class CrawlerStaticFil
     {
 
         $result[0]=$matchs[0];
-        $result[1]=$matchs[5];
-//        foreach($matchs as $match){
-//            foreach($match as $keyValueMatch=>$valueMatch){
-//                if(!empty($valueMatch) AND $valueMatch!="'" AND $valueMatch!='"'){
-//                    $result[1][$keyValueMatch]=$valueMatch;
-//                }
-//            }
-//        }
-        //var_dump($result);
+        $result[1]=$matchs[6];
         return $result[1];
     }
 
@@ -269,15 +249,31 @@ class CrawlerStaticFil
         }
 
         $validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?)." . $this->language . "/i", $url, $m);
+
         if ($validResult) {
             $baseUrlTrash = $m[2] . "." . $this->language;
+
             $explodeBar = explode("/", $baseUrlTrash);
+
             if (!isset($explodeBar[1])) {
                 return str_replace($baseUrlTrash, "######", $url);
             }
             array_pop($explodeBar);
-            return str_replace($baseUrlTrash, implode("/", $explodeBar) . "/######", $url);
 
+            $arrBaseTrash=str_split($baseUrlTrash);
+            $changeString="";
+            if($arrBaseTrash[0]=="/"){
+                $changeString="/";
+            }
+            if(count($explodeBar)>1){
+                $changeString=implode("/", $explodeBar);
+            }
+            $result= str_replace("=/".$baseUrlTrash, "=/".$changeString . "######", $url, $countNumberOfReplays);
+            if($countNumberOfReplays==0){
+                $result = str_replace("=".$baseUrlTrash, "=".$changeString . "######", $url,$countNumberOfReplays);
+            }
+
+            return $result;
         }
     }
 
