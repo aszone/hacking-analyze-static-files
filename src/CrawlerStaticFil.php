@@ -134,12 +134,14 @@ class CrawlerStaticFil
             $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles3);
         }
 
-        var_dump($cacheUrlFiles);
+        //var_dump($cacheUrlFiles);
         return $cacheUrlFiles;
 
     }
 
-    private function saveFile($file,$nameFile){
+    private function saveFile($file,$nameFile)
+    {
+        echo $nameFile.".***\n";
 
         $myfile = fopen($this->folderSave."/".str_replace("/","-",$nameFile), "w") or die("Unable to open file!");
         fwrite($myfile, $file);
@@ -191,7 +193,7 @@ class CrawlerStaticFil
                 $resultFinal[]=$this->generateUrl($result,$patchFileNow);
                 $resultFinal[]=$this->generateUrlAbsolute($result,$patchFileNow);
             }
-
+            //var_dump($resultFinal);
             return $resultFinal;
         }
 
@@ -244,26 +246,18 @@ class CrawlerStaticFil
         return false;
     }
 
-    protected function sanitazePregMatchAll($matchs){
+    protected function sanitazePregMatchAll($matchs)
+    {
 
         $result[0]=$matchs[0];
-        foreach($matchs as $match){
-            foreach($match as $keyValueMatch=>$valueMatch){
-                if(!empty($valueMatch) AND $valueMatch!="'" AND $valueMatch!='"'){
-
-                    //$this->urlBaseExploit
-                    //echo $valueMatch."**\n";
-                    $result[1][$keyValueMatch]=$valueMatch;
-//                    if (strpos($valueMatch, $this->url) !== false) {
-//
-//                    }else{
-//                        echo str_replace("######",$valueMatch,$this->urlBaseExploit) ;
-//                        exit();
-//                    }
-
-                }
-            }
-        }
+        $result[1]=$matchs[5];
+//        foreach($matchs as $match){
+//            foreach($match as $keyValueMatch=>$valueMatch){
+//                if(!empty($valueMatch) AND $valueMatch!="'" AND $valueMatch!='"'){
+//                    $result[1][$keyValueMatch]=$valueMatch;
+//                }
+//            }
+//        }
         //var_dump($result);
         return $result[1];
     }
