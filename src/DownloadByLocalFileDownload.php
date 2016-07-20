@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Created by PhpStorm.
  * User: lenonleite
@@ -7,14 +6,13 @@
  * Time: 18:13
  */
 
-namespace Aszone\CrawlerStaticFile;
+namespace Aszone\Crawler;
 
 use Aszone\FakeHeaders\FakeHeaders;
 use GuzzleHttp\Client;
 use Symfony\Component\DomCrawler\Crawler;
 
-
-class CrawlerStaticFil
+class DownloadByLocalFileDownload
 {
     public $file;
 
@@ -351,6 +349,6 @@ class CrawlerStaticFil
         return false;
 
     }
-
-
 }
+
+

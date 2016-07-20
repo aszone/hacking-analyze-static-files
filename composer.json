@@ -1,7 +1,7 @@
 {
-  "name": "aszone/crawler-static-file",
+  "name": "aszone/crawler/download-file-by-lfd",
   "type": "library",
-  "description": "AsZone Component - Proxy Avenger",
+  "description": "AsZone Component - Crawler Static File",
   "keywords": ["proxies","proxy","tor","virgin proxy","avenger","aszone","hacker","hacking","attack", "attacking"],
   "homepage": "http://www.lenonleite.com.br",
   "license": "MIT",
@@ -26,7 +26,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Aszone\\CrawlerStaticFile\\": "src/"
+      "Aszone\\Crawler\\": "src/"
     }
   },
   "minimum-stability": "dev"
