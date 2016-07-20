@@ -39,7 +39,6 @@ class CrawlerStaticFil
         $this->saveFile($this->file,$this->getNameFile($url));
         $this->urlBaseExploit = $this->getBaseExploit();
 
-
     }
 
     private function defaultEnterData()
@@ -63,10 +62,7 @@ class CrawlerStaticFil
 
     protected function downloadAllFiles(){
 
-        $urlFiles=array();
-        $urlFiles=$this->getIncludes($this->file);
-        $urlFiles=array_merge($this->getLinks($this->file),$urlFiles);
-        $urlFiles=array_merge($this->findIndexs($this->url),$urlFiles);
+        $urlFiles=$this->getMoreLinksByBody();
         $allUrlFiles=$urlFiles;
         $loop=true;
 
@@ -97,29 +93,51 @@ class CrawlerStaticFil
         return $allUrlFiles;
     }
 
-    protected function findIndexs($url){
+    protected function findIndexs($url=false){
 
-        $arrUrl=parse_url($url);
-        $ext=explode(".",$arrUrl["path"]);
+        $arrBaseExploit=parse_url($this->getBaseExploit($url));
+        if(!$url){
+            $url=$this->urlBaseExploit;
+            $arrBaseExploit=parse_url($url);
+        }
 
-        $arrUrl["query"]=str_replace("//","/",$arrUrl["query"]);
-        $explodeQuery=explode("/",$arrUrl["query"]);
+        $ext=explode(".",$arrBaseExploit["path"]);
+
+        // Today I am very nervous... sonn of bith, bank, credit card bith
+        $explodeQuery=explode("/",$arrBaseExploit['query']);
         $query=array();
-        if(isset($explodeQuery[1])){
-            $patch="";
+        $patch="";
+
+        if((isset($explodeQuery[1]))AND(!empty($explodeQuery[1]))){
             foreach($explodeQuery as $parseQuery){
                 $patch.=$parseQuery."/";
-                $query[]=$arrUrl["scheme"]."://".$arrUrl["host"].$arrUrl["path"]."?".$patch."index.".$ext[1];
+                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$patch."index.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
                 if($ext[1]=="asp"){
-                    $query[]=$arrUrl["scheme"]."://".$arrUrl["host"].$arrUrl["path"]."?".$patch."default.".$ext[1];
+                    $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$patch."default.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
                 }
             }
-            array_pop($query);
+        }elseif((isset($explodeQuery[1]))AND(empty($explodeQuery[1]))){
+            $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."/index.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+            if($ext[1]=="asp"){
+                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."/default.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+            }
+        }else{
+            $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."index.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+            if($ext[1]=="asp"){
+                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."default.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+            }
         }
+
         return $query;
     }
 
-    protected function getMoreLinksByBody($body,$urlFile){
+
+    protected function getMoreLinksByBody($body=false,$urlFile=false){
+
+        if(!$body AND !$urlFile){
+            $body=$this->file;
+            $urlFile=$this->url;
+        }
 
         $cacheUrlFiles=array();
         $cacheUrlFiles1=$this->getIncludes($body,$urlFile);
@@ -247,7 +265,6 @@ class CrawlerStaticFil
         if(!$url){
             $url=$this->url;
         }
-
         $validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?)." . $this->language . "/i", $url, $m);
 
         if ($validResult) {
