@@ -26,16 +26,11 @@ class DownloadByLocalFileDownload
 
     public $folderSave;
 
-    public function __construct($commandData,$url)
+    public function __construct($commandData)
     {
 
         $this->commandData = array_merge($this->defaultEnterData(), $commandData);
-        $this->url =$url;
-        $this->file =$this->readFile($url);
-        $this->language = $this->checkLanguage();
-        $this->folderSave = $this->getPatchFolder();
-        $this->saveFile($this->file,$this->getNameFile($url));
-        $this->urlBaseExploit = $this->getBaseExploit();
+
 
     }
 
@@ -51,13 +46,25 @@ class DownloadByLocalFileDownload
         return $dataDefault;
     }
 
-    public function getAllFiles(){
+    public function getAllFiles($url){
+
+        $this->initRegister($url);
 
         $results['includes']=$this->downloadAllFiles();
 
         return $results;
     }
 
+    protected function initRegister($url){
+
+        $this->url =$url;
+        $this->file =$this->readFile($url);
+        $this->language = $this->checkLanguage();
+        $this->folderSave = $this->getPatchFolder();
+        $this->saveFile($this->file,$this->getNameFile($url));
+        $this->urlBaseExploit = $this->getBaseExploit();
+
+    }
     protected function downloadAllFiles(){
 
         $urlFiles=$this->getMoreLinksByBody();
