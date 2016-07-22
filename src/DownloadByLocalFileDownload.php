@@ -173,7 +173,7 @@ class DownloadByLocalFileDownload
 
     private function createFolder($folder){
 
-        $pathname="results/".$folder;
+        $pathname="../../../../results/lfd/".$folder;
         if(is_dir($pathname)){
             return $this->folderSave = $pathname;
         }
