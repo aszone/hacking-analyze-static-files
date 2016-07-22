@@ -6,7 +6,7 @@
  * Time: 18:13
  */
 
-namespace Aszone\Crawler;
+namespace Aszone\HackingAnalyzeStaticFiles;
 
 use Aszone\FakeHeaders\FakeHeaders;
 use GuzzleHttp\Client;
