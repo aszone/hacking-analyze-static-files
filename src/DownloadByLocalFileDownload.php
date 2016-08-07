@@ -70,14 +70,17 @@ class DownloadByLocalFileDownload
         $urlFiles=$this->getMoreLinksByBody();
         $allUrlFiles=$urlFiles;
         $loop=true;
+        $urlValids=array();
 
         while($loop==true){
             $newUrlFiles=array();
+            $urlFiles=array_unique($urlFiles);
             foreach($urlFiles as $urlFile){
                 $body = $this->readFile($urlFile);
                 //Check if is file of system
                 if($this->checkIfFileSystem($body,$urlFile)){
                     echo $urlFile."\n";
+                    $urlValids[]=$urlFile;
                     $this->saveFile($body,$this->getNameFile($urlFile));
                     $cacheUrlFiles=$this->getMoreLinksByBody($body,$urlFile);
                     if($cacheUrlFiles){
@@ -85,7 +88,6 @@ class DownloadByLocalFileDownload
                     }
                 }
             }
-
             $checktNewsFiles=array_diff($newUrlFiles,$allUrlFiles);
             $urlFiles=$checktNewsFiles;
             if(empty($checktNewsFiles)){
@@ -95,7 +97,7 @@ class DownloadByLocalFileDownload
             }
         }
 
-        return $allUrlFiles;
+        return $urlValids;
     }
 
     protected function findIndexs($url=false){
@@ -106,10 +108,21 @@ class DownloadByLocalFileDownload
             $arrBaseExploit=parse_url($url);
         }
 
+        if($arrBaseExploit["path"]=="/"){
+            return array();
+        }
+
         $ext=explode(".",$arrBaseExploit["path"]);
 
+        if(!isset($ext[1])){
+            return array();
+        }
+
         // Today I am very nervous... sonn of bith, bank, credit card bith
-        $explodeQuery=explode("/",$arrBaseExploit['query']);
+        $explodeQuery=array();
+        if(!empty($arrBaseExploit['query'])){
+            $explodeQuery=explode("/",$arrBaseExploit['query']);
+        }
         $query=array();
         $patch="";
 
@@ -128,6 +141,7 @@ class DownloadByLocalFileDownload
             }
         }else{
             $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."index.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+            //var_dump($query);
             if($ext[1]=="asp"){
                 $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."default.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
             }
@@ -165,15 +179,19 @@ class DownloadByLocalFileDownload
 
     private function saveFile($file,$nameFile)
     {
-        $myfile = fopen($this->folderSave."/".str_replace("/","-",$nameFile), "w") or die("Unable to open file!");
-        fwrite($myfile, $file);
-        fclose($myfile);
+
+        $nameFile=$this->folderSave."/".str_replace("/","-",$nameFile);
+        if(!is_dir($nameFile)){
+            $myfile = fopen($nameFile, "w") or die("Unable to open file!");
+            fwrite($myfile, $file);
+            fclose($myfile);
+        }
 
     }
 
     private function createFolder($folder){
 
-        $pathname="../../../../results/lfd/".$folder;
+        $pathname=__DIR__."/../results/lfd/".$folder;
         if(is_dir($pathname)){
             return $this->folderSave = $pathname;
         }
