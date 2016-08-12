@@ -26,12 +26,18 @@ class DownloadByLocalFileDownload
 
     public $folderSave;
 
+    public $folderDownload;
+
     public function __construct($commandData)
     {
 
         $this->commandData = array_merge($this->defaultEnterData(), $commandData);
+        $this->folderDownload = __DIR__."/../../../../results/lfd/";
 
+    }
 
+    public function setFolderDownload($dir){
+        $this->folderDownload = $dir;
     }
 
     private function defaultEnterData()
@@ -103,6 +109,7 @@ class DownloadByLocalFileDownload
     protected function findIndexs($url=false){
 
         $arrBaseExploit=parse_url($this->getBaseExploit($url));
+
         if(!$url){
             $url=$this->urlBaseExploit;
             $arrBaseExploit=parse_url($url);
@@ -114,7 +121,10 @@ class DownloadByLocalFileDownload
 
         $ext=explode(".",$arrBaseExploit["path"]);
 
+
+
         if(!isset($ext[1])){
+
             return array();
         }
 
@@ -125,25 +135,34 @@ class DownloadByLocalFileDownload
         }
         $query=array();
         $patch="";
+        $fragment="";
+        if(isset($arrBaseExploit['fragment']) and (!empty($arrBaseExploit['fragment']))){
+           $fragment= $arrBaseExploit['fragment'];
+        }
+
+
 
         if((isset($explodeQuery[1]))AND(!empty($explodeQuery[1]))){
+            array_pop($explodeQuery);
             foreach($explodeQuery as $parseQuery){
+
                 $patch.=$parseQuery."/";
-                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$patch."index.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$patch."index.".$ext[1].str_replace("#####","",$fragment);
                 if($ext[1]=="asp"){
-                    $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$patch."default.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+                    $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$patch."default.".$ext[1].str_replace("#####","",$fragment);
                 }
             }
+            //exit();
         }elseif((isset($explodeQuery[1]))AND(empty($explodeQuery[1]))){
-            $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."/index.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+            $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."/index.".$ext[1].str_replace("#####","",$fragment);
             if($ext[1]=="asp"){
-                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."/default.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."/default.".$ext[1].str_replace("#####","",$fragment);
             }
         }else{
-            $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."index.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+            $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."index.".$ext[1].str_replace("#####","",$fragment);
             //var_dump($query);
             if($ext[1]=="asp"){
-                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."default.".$ext[1].str_replace("#####","",$arrBaseExploit['fragment']);
+                $query[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$explodeQuery[0]."default.".$ext[1].str_replace("#####","",$fragment);
             }
         }
 
@@ -191,7 +210,7 @@ class DownloadByLocalFileDownload
 
     private function createFolder($folder){
 
-        $pathname=__DIR__."/../../../../results/lfd/".$folder;
+        $pathname=$this->folderDownload.$folder;
         if(is_dir($pathname)){
             return $this->folderSave = $pathname;
         }
@@ -285,11 +304,11 @@ class DownloadByLocalFileDownload
 
     protected function getBaseExploit($url=false)
     {
+
         if(!$url){
             $url=$this->url;
         }
-        $validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?)." . $this->language . "/i", $url, $m);
-
+        $validResult = preg_match("/." . $this->language . ".*?(=|\/)(.+?).(" . $this->language . "|inc|yml|ini)/i", $url, $m);
         if ($validResult) {
             $baseUrlTrash = $m[2] . "." . $this->language;
 
@@ -301,18 +320,22 @@ class DownloadByLocalFileDownload
             array_pop($explodeBar);
 
             $arrBaseTrash=str_split($baseUrlTrash);
+
             $changeString="";
             if($arrBaseTrash[0]=="/"){
                 $changeString="/";
             }
             if(count($explodeBar)>1){
                 $changeString=implode("/", $explodeBar);
+
+                if(substr($changeString, -1)!="/"){
+                    $changeString.="/";
+                }
             }
             $result= str_replace("=/".$baseUrlTrash, "=/".$changeString . "######", $url, $countNumberOfReplays);
             if($countNumberOfReplays==0){
                 $result = str_replace("=".$baseUrlTrash, "=".$changeString . "######", $url,$countNumberOfReplays);
             }
-
             return $result;
         }
     }
@@ -348,10 +371,13 @@ class DownloadByLocalFileDownload
 
     protected function getLinks($body)
     {
-
+        //var_dump($body);
         $crawler = new Crawler($body);
         $urls=array();
         $crawler->filter('a')->each(function (Crawler $node, $i) use(&$res) {
+            $res[]= $node->attr('href');
+        });
+        $crawler->filter('area')->each(function (Crawler $node, $i) use(&$res) {
             $res[]= $node->attr('href');
         });
         if($res){
