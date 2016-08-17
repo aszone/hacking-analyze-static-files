@@ -65,9 +65,7 @@ class DownloadByLocalFileDownload
 
         $this->url =$url;
         $this->file =$this->readFile($url);
-        if($this->file==false){
-            exit("Page init not found");
-        }
+
         $this->language = $this->checkLanguage();
         $this->folderSave = $this->getPatchFolder();
         $this->saveFile($this->file,$this->getNameFile($url));
@@ -76,9 +74,12 @@ class DownloadByLocalFileDownload
     }
     protected function downloadAllFiles(){
 
-        $urlFiles=$this->getMoreLinksByBody();
-        $allUrlFiles=$urlFiles;
-        $loop=true;
+        $loop=false;
+        if($this->file!=false){
+            $urlFiles=$this->getMoreLinksByBody();
+            $allUrlFiles=$urlFiles;
+            $loop=true;
+        }
         $urlValids=array();
 
         while($loop==true){
