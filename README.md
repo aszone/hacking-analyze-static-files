@@ -1,9 +1,9 @@
-# Crawler - Download File By Local File Download
+# Crawler - Reading Static File
 
-> ASZone - Crawler - Download File By Local File Download
+> ASZone - Crawler - Reading Static File
 
 ### Beta
-> Download File By Local File Download is a open source tool for download files extracted of system with fail of Local File Download / Path Director
+> Reading Static File is a open source tool for reading static file / Path Director
 
 ## Instalation
 

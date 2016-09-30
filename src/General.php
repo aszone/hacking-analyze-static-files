@@ -79,7 +79,7 @@ class General
     }
 
     //stay
-    protected function readFile($url)
+    public function readFile($url)
     {
         $header = new FakeHeaders();
         try {
