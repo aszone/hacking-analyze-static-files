@@ -49,7 +49,7 @@ class WordPress
     }
 
     //stay
-    protected function checkIfWordPressConfigFile($body){
+    public function checkIfWordPressConfigFile($body){
         $isValid = preg_match("/(define\('WP_USE_THEMES', true\);)/", $body, $m);
         if ($isValid) {
            return true;

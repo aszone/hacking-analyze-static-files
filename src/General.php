@@ -11,7 +11,7 @@ namespace Aszone\HackingAnalyzeStaticFiles;
 use Aszone\FakeHeaders\FakeHeaders;
 use GuzzleHttp\Client;
 use Symfony\Component\DomCrawler\Crawler;
-use Aszone\ReadingStaticFile\WordPress;
+use Aszone\HackingAnalyzeStaticFiles\WordPress;
 
 class General
 {
@@ -99,7 +99,7 @@ class General
     }
 
     //stay
-    protected function checkIfFileSystem($body,$urlFile){
+    public function checkIfFileSystem($body,$urlFile){
 
 
         $isValid = preg_match("/<%@|<%|<\?php|<\?=|<\?/", $body, $m);
@@ -124,14 +124,8 @@ class General
         $crawler->filter('area')->each(function (Crawler $node, $i) use(&$res) {
             $res[]= $node->attr('href');
         });
-        if($res){
-            foreach($res as $r){
-                $urls[]=$this->generateExploitOfLinkInBody($r);
-            }
-        }
 
-
-        return $urls;
+        return $res;
 
     }
 
@@ -151,7 +145,7 @@ class General
 
     }
 
-    protected function sanitazePregMatchAll($matchs)
+    public function sanitazePregMatchAll($matchs)
     {
         $result[0]=$matchs[0];
         $result[1]=$matchs[6];
