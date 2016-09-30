@@ -113,7 +113,7 @@ class General
     }
 
     //stay
-    protected function getLinks($body)
+    public function getLinks($body)
     {
         //var_dump($body);
         $crawler = new Crawler($body);
@@ -133,6 +133,29 @@ class General
 
         return $urls;
 
+    }
+
+    public function getIncludes($file){
+
+        $resultFinal=array();
+        $isValid = preg_match_all("/(include file|require_once|include_once|include|require)(.+|)(\(|\=|)(.+|)(\"|\')(.+?)(\"|\')((.+|))(\)|-->|)/i", $file, $m);
+
+        if ($isValid) {
+            $results=$this->sanitazePregMatchAll($m);
+            foreach($results as $result){
+                $resultFinal[]=$result;
+            }
+        }
+
+        return $resultFinal;
+
+    }
+
+    protected function sanitazePregMatchAll($matchs)
+    {
+        $result[0]=$matchs[0];
+        $result[1]=$matchs[6];
+        return $result[1];
     }
 
 
