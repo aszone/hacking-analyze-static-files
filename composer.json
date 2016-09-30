@@ -1,5 +1,5 @@
 {
-  "name": "lenonleite/hacking-analyze-static-files",
+  "name": "lenonleite/reading-static-file",
   "type": "library",
   "description": "AsZone Component - Crawler Static File",
   "keywords": ["proxies","proxy","tor","virgin proxy","avenger","aszone","hacker","hacking","attack", "attacking"],
@@ -26,7 +26,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Aszone\\HackingAnalyzeStaticFiles\\": "src/"
+      "Aszone\\ReadingStaticFile\\": "src/"
     }
   },
   "minimum-stability": "dev"
