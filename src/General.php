@@ -34,7 +34,9 @@ class General
 
         $this->commandData = array_merge($this->defaultEnterData(), $commandData);
         //$this->folderDownload = __DIR__."/../../../../results/lfd/";
-
+        if ($this->commandData['torl']) {
+            $this->commandData['tor'] = $this->commandData['torl'];
+        }
     }
 
 
@@ -87,7 +89,7 @@ class General
                 'headers' => ['User-Agent' => $header->getUserAgent()],
                 'proxy' => $this->commandData['tor'],
                 'timeout' => 30,
-                ],
+            ],
             ]);
             $resultBody = $client->get($url)->getBody()->getContents();
             return $resultBody;

@@ -32,6 +32,9 @@ class WordPress
     {
 
         $this->commandData = array_merge($this->defaultEnterData(), $commandData);
+        if ($this->commandData['torl']) {
+            $this->commandData['tor'] = $this->commandData['torl'];
+        }
         //$this->folderDownload = __DIR__."/../../../../results/lfd/";
 
     }
@@ -52,7 +55,7 @@ class WordPress
     public function checkIfWordPressConfigFile($body){
         $isValid = preg_match("/(define\('WP_USE_THEMES', true\);)/", $body, $m);
         if ($isValid) {
-           return true;
+            return true;
         }
         return false;
     }
